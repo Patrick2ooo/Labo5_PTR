@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "audio_setup.h": "c",
+        "fft_utils.h": "c",
+        "complex.h": "c",
+        "complex": "c"
+    }
+}
