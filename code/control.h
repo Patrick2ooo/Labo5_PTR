@@ -15,11 +15,15 @@
 #define CONTROL_H
 
 #include <stdbool.h>
+#include <alchemy/event.h>
 
-typedef struct Ctl_data
-{
-    bool running;
-    int run_audio;
+typedef struct Ctl_data {
+	bool running;
+	bool video_running;
+	bool convolution_running;
+	bool greyscale_running;
+	int run_audio;
+	RT_EVENT *video_event;
 } Ctl_data_t;
 
 #endif

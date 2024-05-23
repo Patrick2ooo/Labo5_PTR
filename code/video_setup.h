@@ -25,21 +25,25 @@
 #define VIDEO_ACK_TASK_PRIORITY 50
 
 // Video defines
-#define WIDTH 320
-#define HEIGHT 240
-#define FRAMERATE 15
-#define NB_FRAMES 300
-#define BYTES_PER_PIXEL 4
+#define WIDTH			320
+#define HEIGHT			240
+#define FRAMERATE		15
+#define NB_FRAMES		300
+#define BYTES_PER_PIXEL		4
+#define VIDEO_ON		0x1
+#define VIDEO_EVENT		0x3
 
-#define VIDEO_FILENAME "output_video.raw"
+#define VIDEO_FILENAME		"output_video.raw"
 
-#define S_IN_NS 1000000000UL
+#define S_IN_NS			1000000000UL
 
-typedef struct Priv_video_args
-{
-    Ctl_data_t *ctl;
-    RT_TASK rt_task;
-    uint8_t *buffer;
+typedef struct Priv_video_args {
+	Ctl_data_t *ctl;
+	RT_TASK video_rt_task;
+	uint8_t *buffer;
+	uint8_t *greyscale_buffer;
+	uint8_t *convolution_buffer;
+	FILE *file;
 } Priv_video_args_t;
 
 /**
