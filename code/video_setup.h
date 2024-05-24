@@ -33,7 +33,7 @@
 #define VIDEO_ON		0x1
 #define VIDEO_EVENT		0x3
 
-#define VIDEO_FILENAME		"output_video.raw"
+#define VIDEO_FILENAME		"/usr/resources/output_video.raw"
 
 #define S_IN_NS			1000000000UL
 

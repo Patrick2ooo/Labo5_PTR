@@ -3,6 +3,7 @@
         "audio_setup.h": "c",
         "fft_utils.h": "c",
         "complex.h": "c",
-        "complex": "c"
+        "complex": "c",
+        "stdbool.h": "c"
     }
 }

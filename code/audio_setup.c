@@ -3,9 +3,7 @@
 #include <complex.h>
 #include <fft_utils.h>
 
-
-
-
+RTIME last_global_time = 0, current_global_time = 0;
 typedef double complex cplx;
 
 void log_task(void *cookie)
@@ -15,6 +13,7 @@ void log_task(void *cookie)
      * Exemple d'affichage : Dominant frequency : 64Hz, computation time : 800ms */
     int err = 0;
     double *log;
+    int count = 0;
     Priv_audio_args_t *priv = (Priv_audio_args_t *)cookie;
     
     while(priv->ctl->running)
@@ -33,7 +32,19 @@ void log_task(void *cookie)
                 }
                 break;
             }
+            current_global_time = rt_timer_read();
+            if(count < 1000){
+                priv->MyTime[count] = (double)(current_global_time - last_global_time)/(double)1000000;
+                count++;
+                last_global_time = 0;
+            }
+            else{
+                priv->ctl->running = false;
+                break;
+            }
+
     }
+    rt_printf("Terminating log task\n");
 }
 
 void acquisition_task(void *cookie)
@@ -50,9 +61,9 @@ void acquisition_task(void *cookie)
     int err;
     data_t* msg;
     // Calculate the minimum frequency of the task
-    uint32_t audio_task_freq = (SAMPLING * sizeof(data_t)) / (FIFO_SIZE);   //added a multiplication by 2 to take into account the stereo signal
+    uint32_t audio_task_freq = (SAMPLING * sizeof(data_t)) / (FIFO_SIZE);   //375Hz
     // Calculate the period of the task with a margin to ensure not any data is lost
-    uint64_t period_in_ns = S_IN_NS / (audio_task_freq + PERIOD_MARGIN);
+    uint64_t period_in_ns = S_IN_NS / (audio_task_freq + PERIOD_MARGIN); //2.5ms
     if((err = rt_queue_create(&priv->acquisition_queue, "acquisition_queue", 1000 * FIFO_SIZE * NB_CHAN, Q_UNLIMITED, Q_FIFO)) != 0){ //on doit avoir plus que 1 message ou 1 buffer plus grand sinon logiquement on peux plus send parce que la queue est occupée
         rt_printf("Could not create the audio queue\n");
         return;
@@ -63,6 +74,9 @@ void acquisition_task(void *cookie)
         return;
     }
     while (priv->ctl->running){
+        if(last_global_time == 0){
+        last_global_time = rt_timer_read();
+        }
         if(priv->ctl->run_audio){
             msg = rt_queue_alloc(&priv->acquisition_queue, FIFO_SIZE * NB_CHAN);
             if(msg == NULL)
@@ -75,7 +89,7 @@ void acquisition_task(void *cookie)
             if (read)
             {
                 // Write the data to the audio output
-                err = rt_queue_send(&priv->acquisition_queue, msg, read, Q_NORMAL); //mettre en Q_NORMAL
+                err = rt_queue_send(&priv->acquisition_queue, msg, read, Q_NORMAL); //environ 8192*2 / 512 = 32 envoie pour avoir toute les donnée
                 if(err < 0) 
                 {           
                     rt_queue_free(&priv->acquisition_queue, msg);
@@ -142,7 +156,7 @@ void processing_task(void *cookie)
                 rt_printf("Could not receive data from the audio queue\n");
                 break;
             }
-            //rt_printf("data received\n"); //ok
+            //rt_printf("data received\n");
             memcpy(priv->samples_buf + size, msg, FIFO_SIZE * NB_CHAN);
             size += bytes_received;
             if((err = rt_queue_free(&priv->acquisition_queue, msg)) != 0){  
@@ -183,7 +197,7 @@ void processing_task(void *cookie)
                 // Calculate the frequency
                 log[0] = ((double)max_index * (double)SAMPLING) / (double)FFT_BINS;
                 current_time = rt_timer_read();
-                log[1] = (double)(current_time - last_time)/(double)1000000;
+                log[1] = (double)(current_time - last_time)/(double)1000000;            //environ 31ms
                 rt_queue_send(&priv->processing_queue, log, 2 * sizeof(double), Q_NORMAL);
                 max_power = 0;
                 max_index = 0;

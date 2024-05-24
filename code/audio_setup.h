@@ -47,6 +47,7 @@ typedef struct Priv_audio_args
     RT_QUEUE acquisition_queue;
     RT_QUEUE processing_queue;
     data_t *samples_buf;
+    double MyTime[1000];
 } Priv_audio_args_t;
 
 /**

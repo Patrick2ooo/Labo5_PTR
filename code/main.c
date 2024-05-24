@@ -76,9 +76,14 @@ void ioctl_ctl_task(void *cookie)
 		if (keys | KEY0) {
 			rt_printf("Key0 pressed, exiting the program\n");
 			priv->running = false;
+			rt_event_signal(priv->video_event,END_VIDEO_EVENT);
 		}
+
 		rt_task_wait_period(NULL);
 	}
+	if(priv->running == false){
+			rt_event_signal(priv->video_event,END_VIDEO_EVENT);
+		}
 }
 
 int main(int argc, char *argv[])
@@ -219,7 +224,9 @@ int main(int argc, char *argv[])
 	// Free all resources of the video/audio/ioctl
 
 	printf("All tasks have been joined\n");
-
+	for(int i = 0; i < 1000; i++){
+		printf("My audio time : %f ms\n", (double)priv_audio.MyTime[i]);
+	}
 	clear_ioctl();
 	clear_audio();
 	clear_video();
