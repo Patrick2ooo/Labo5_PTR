@@ -19,6 +19,7 @@
 #include <alchemy/task.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "image.h"
 
 #include "control.h"
 
@@ -43,6 +44,8 @@ typedef struct Priv_video_args {
 	uint8_t *buffer;
 	uint8_t *greyscale_buffer;
 	uint8_t *convolution_buffer;
+	uint8_t *conv_grey_buffer;
+	struct img_1D_t result_conv;
 	FILE *file;
 } Priv_video_args_t;
 
