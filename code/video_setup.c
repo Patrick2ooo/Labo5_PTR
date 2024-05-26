@@ -7,7 +7,6 @@
 #include "image.h"
 #include "convolution.h"
 #include "grayscale.h"
-#define SIZEARRAY 1000
 
 void video_task(void *cookie)
 {
@@ -15,13 +14,20 @@ void video_task(void *cookie)
 	uint64_t period_in_ns = S_IN_NS / FRAMERATE;
 
 	struct img_1D_t img, greyscale_img;
-	
+
 	img.data = priv->buffer;
+	img.width = WIDTH;
+	img.height = HEIGHT;
+	img.components = BYTES_PER_PIXEL;
+
 	greyscale_img.data = priv->greyscale_buffer;
-	
-	img.width, greyscale_img.width, priv->result_conv.width  = WIDTH;
-	img.height, greyscale_img.height, priv->result_conv.height  = HEIGHT;
-	img.components, greyscale_img.components, priv->result_conv.components = BYTES_PER_PIXEL;
+	greyscale_img.width = WIDTH;
+	greyscale_img.height = HEIGHT;
+	greyscale_img.components = BYTES_PER_PIXEL;
+
+	priv->result_conv.width = WIDTH;
+	priv->result_conv.height = HEIGHT;
+	priv->result_conv.components = BYTES_PER_PIXEL;
 
 	int indexFrame = 0;
 
@@ -40,7 +46,6 @@ void video_task(void *cookie)
 		      SEEK_SET);
 		// Read each frame from the file
 		for (; indexFrame < NB_FRAMES; indexFrame++) {
-			
 			if (!priv->ctl->running || !priv->ctl->video_running) {
 				break;
 			}
@@ -57,16 +62,18 @@ void video_task(void *cookie)
 				       WIDTH * HEIGHT * BYTES_PER_PIXEL);
 			} else if (priv->ctl->convolution_running &&
 				   !priv->ctl->greyscale_running) {
-				rgba_to_grayscale8(&img, priv->greyscale_buffer);
+				rgba_to_grayscale8(&img,
+						   priv->greyscale_buffer);
 
 				convolution_grayscale(priv->greyscale_buffer,
-						      priv->convolution_buffer, WIDTH,
-						      HEIGHT);
+						      priv->convolution_buffer,
+						      WIDTH, HEIGHT);
 
 				grayscale_to_rgba(priv->convolution_buffer,
 						  &priv->result_conv);
 
-				memcpy(get_video_buffer(), priv->result_conv.data,
+				memcpy(get_video_buffer(),
+				       priv->result_conv.data,
 				       WIDTH * HEIGHT * BYTES_PER_PIXEL);
 			} else {
 				memcpy(get_video_buffer(), priv->buffer,
@@ -74,10 +81,11 @@ void video_task(void *cookie)
 			}
 
 			rt_task_wait_period(NULL);
-
 		}
 
-		
+		if (indexFrame >= NB_FRAMES) {
+			indexFrame = 0;
+		}
 	}
 	// Clear the video buffer and black screen
 	memset(get_video_buffer(), 0, WIDTH * HEIGHT * BYTES_PER_PIXEL);
