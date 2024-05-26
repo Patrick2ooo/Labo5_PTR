@@ -185,12 +185,20 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	priv_video.convolution_buffer =
-		(uint8_t *)malloc(HEIGHT * WIDTH * BYTES_PER_PIXEL);
+		(uint8_t *)malloc(WIDTH * HEIGHT * sizeof(uint8_t));
 
 	if (!priv_video.convolution_buffer) {
 		perror("Error: Couldn't allocate memory for convolution buffer.\n");
 		exit(EXIT_FAILURE);
 	}
+	priv_video.conv_grey_buffer =
+		(uint8_t *)malloc(WIDTH * HEIGHT * sizeof(uint8_t));
+	if (!priv_video.conv_grey_buffer) {
+		perror("Error: Couldn't allocate memory for convolution greyscale buffer.\n");
+		exit(EXIT_FAILURE);
+	}
+	priv_video.result_conv.data = (uint8_t *)malloc(WIDTH * HEIGHT * BYTES_PER_PIXEL);
+
 	priv_video.ctl = &ctl;
 	ctl.video_running = true;
 
@@ -236,6 +244,8 @@ int main(int argc, char *argv[])
 	free(priv_video.buffer);
 	free(priv_video.greyscale_buffer);
 	free(priv_video.convolution_buffer);
+	free(priv_video.conv_grey_buffer);
+	free(priv_video.result_conv.data);
     // Close the video file
     fclose(priv_video.file);
     
