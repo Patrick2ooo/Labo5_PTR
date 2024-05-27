@@ -124,8 +124,27 @@ int main(int argc, char *argv[])
 
 	// Init private data used for the audio tasks
 	Priv_audio_args_t priv_audio;
-	priv_audio.samples_buf =
-		(data_t *)malloc(2 * FFT_BINS * sizeof(data_t));
+	// Allocate memory for the audio buffer of size 2 * FFT_BINS plus a margin of FIFO_SIZE * NB_CHAN
+	priv_audio.samples_buf =(data_t *)malloc(2 * FFT_BINS * sizeof(data_t) + FIFO_SIZE * NB_CHAN * sizeof(data_t));
+	if (!priv_audio.samples_buf) {
+		perror("Error: Couldn't allocate memory for audio buffer.\n");
+		exit(EXIT_FAILURE);
+	}
+	priv_audio.out = (cplx *)malloc(sizeof(cplx) * FFT_BINS);
+	if (!priv_audio.out) {
+		perror("Error: Couldn't allocate memory for audio out.\n");
+		exit(EXIT_FAILURE);
+	}
+	priv_audio.buf = (cplx *)malloc(sizeof(cplx) * FFT_BINS);
+	if (!priv_audio.buf) {
+		perror("Error: Couldn't allocate memory for audio buf.\n");
+		exit(EXIT_FAILURE);
+	}
+	priv_audio.power = (double *)malloc(sizeof(double) * FFT_BINS);
+	if (!priv_audio.power) {
+		perror("Error: Couldn't allocate memory for audio power.\n");
+		exit(EXIT_FAILURE);
+	}
 	priv_audio.ctl = &ctl;
 
 	// Create the audio acquisition task
@@ -229,16 +248,14 @@ int main(int argc, char *argv[])
 	rt_task_join(&priv_audio.processing_rt_task);
 	rt_task_join(&priv_audio.log_rt_task);
 	rt_task_join(&priv_video.video_rt_task);
+	
 	// Free all resources of the video/audio/ioctl
 
-	printf("All tasks have been joined\n");
-	for(int i = 0; i < 1000; i++){
-		printf("My audio time : %f ms\n", (double)priv_audio.MyTime[i]);
-	}
 	clear_ioctl();
 	clear_audio();
 	clear_video();
 	printf("Cleared all resources\n");
+
 	// Free everything else
 	free(priv_audio.samples_buf);
 	free(priv_video.buffer);
@@ -246,6 +263,9 @@ int main(int argc, char *argv[])
 	free(priv_video.convolution_buffer);
 	free(priv_video.conv_grey_buffer);
 	free(priv_video.result_conv.data);
+	free(priv_audio.out);
+	free(priv_audio.buf);
+	free(priv_audio.power);
     // Close the video file
     fclose(priv_video.file);
     

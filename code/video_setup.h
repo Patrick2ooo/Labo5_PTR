@@ -28,7 +28,7 @@
 // Video defines
 #define WIDTH			320
 #define HEIGHT			240
-#define FRAMERATE		15
+#define FRAMERATE		15	
 #define NB_FRAMES		300
 #define BYTES_PER_PIXEL		4
 #define VIDEO_ON		0x1

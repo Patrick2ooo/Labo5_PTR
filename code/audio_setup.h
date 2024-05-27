@@ -22,9 +22,12 @@
 #include "audio_utils.h"
 #include "control.h"
 #include <alchemy/queue.h>
+#include <complex.h>
+#include <fft_utils.h>
 
-#define AUDIO_ACK_TASK_PRIORITY 50
-#define AUDIO_PROCESSING_TASK_PRIORITY 50
+
+#define AUDIO_ACK_TASK_PRIORITY 99
+#define AUDIO_PROCESSING_TASK_PRIORITY 0
 #define AUDIO_LOG_TASK_PRIORITY 50
 
 #define AUDIO_FILENAME "output.wav"
@@ -47,6 +50,9 @@ typedef struct Priv_audio_args
     RT_QUEUE acquisition_queue;
     RT_QUEUE processing_queue;
     data_t *samples_buf;
+    cplx *out;                  // Auxiliary array for fft function
+    cplx *buf;
+    double *power;
     double MyTime[1000];
 } Priv_audio_args_t;
 
